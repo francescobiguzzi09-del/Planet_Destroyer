@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Void Cursor - Pixel Planet Destroyer</title>
+  <!-- Font pixelato autentico per tutta l'interfaccia e i testi in-game -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Canvas principale renderizzato a bassa risoluzione virtuale per pixel art autentica -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD Pixelato -->
+    <div id="hud" class="hidden">
+      <div class="hud-group">
+        <div class="bar-wrapper">
+          <span class="bar-label" style="color:#ff2e43;">SCAFO</span>
+          <div class="bar-track"><div id="hp-fill" class="bar-fill"></div></div>
+          <span id="hp-text" style="font-size:8px; color:#fff;">100/100</span>
+        </div>
+        <div class="bar-wrapper">
+          <span class="bar-label" style="color:#38e8ff;">LVL <span id="lvl-num">1</span></span>
+          <div class="bar-track"><div id="xp-fill" class="bar-fill" style="width:0%"></div></div>
+          <span id="xp-text" style="font-size:8px; color:#8ee3ff;">0%</span>
+        </div>
+        <div class="bar-wrapper" id="nova-bar-wrap" style="display:none;">
+          <span class="bar-label" style="color:#ffae2b;">NOVA</span>
+          <div class="bar-track"><div id="nova-fill" class="bar-fill" style="width:100%"></div></div>
+          <span style="font-size:7px; color:#ffae2b;">[SPAZIO]</span>
+        </div>
+      </div>
+
+      <div class="hud-group" style="align-items: flex-end;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="stat-badge">
+            <span style="color:#8ee3ff;">MASSA:</span>
+            <span id="score-text">0</span>
+          </div>
+          <div class="stat-badge" id="boss-timer-badge">
+            <span style="color:#ff2e43;">BOSS TRA:</span>
+            <span id="boss-timer-text">3:00</span>
+          </div>
+          <div class="stat-badge">
+            <span style="color:#26e666;">PIANETI:</span>
+            <span id="planets-text">0</span>
+          </div>
+          <button id="audio-btn" class="pixel-btn" style="padding:6px 9px; font-size:8px;" title="Attiva/Disattiva Audio">AUDIO: ON</button>
+        </div>
+        <div class="stat-badge" style="font-size:7px; color:#8c94b8;">
+          WASD: MUOVI | MOUSE: MIRA &amp; SPARA | SPAZIO: NOVA
+        </div>
+      </div>
+    </div>
+
+    <!-- Schermata Iniziale -->
+    <div id="start-screen" class="overlay-screen">
+      <div class="pixel-panel" style="padding: 28px 24px; max-width: 680px;">
+        <div class="title-logo">VOID CURSOR</div>
+        <p class="subtitle">
+          NAVIGA NEL VUOTO COSMICO, SCAVA GLI STRATI DEI PIANETI FINO AL NUCLEO ROSSO E ASSORBI LA LORO MATERIA PER EVOLVERTI.<br><br>
+          ATTENZIONE AI PIANETI GIGANTI: PROTETTI DA SENTINELLE ORBITALI!
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:20px; font-size:8px; color:#a6b0d6;">
+          <span style="border:2px solid #343752; padding:6px 8px;">[W A S D] PROPULSIONE</span>
+          <span style="border:2px solid #343752; padding:6px 8px;">[MOUSE] PUNTATORE &amp; FUOCO</span>
+          <span style="border:2px solid #343752; padding:6px 8px;">[SPAZIO] ONDA NOVA</span>
+        </div>
+        <button id="start-btn" class="pixel-btn pixel-btn-red" style="font-size:13px; padding:14px 26px;">
+          INIZIA MISSIONE
+        </button>
+      </div>
+    </div>
+
+    <!-- Schermata Level Up -->
+    <div id="levelup-screen" class="overlay-screen hidden">
+      <div class="pixel-panel" style="padding: 22px 20px; max-width: 780px; width: 100%;">
+        <div style="font-size:16px; color:#38e8ff; margin-bottom:8px;">LIVELLO SUPERATO!</div>
+        <div style="font-size:9px; color:#b8c2e0;">SCEGLI UN POTENZIAMENTO DI MATERIA (CLICCA O PREMI 1-2-3)</div>
+        <div id="upgrade-cards" class="upgrade-grid"></div>
+      </div>
+    </div>
+
+    <!-- Schermata Game Over -->
+    <div id="gameover-screen" class="overlay-screen hidden">
+      <div class="pixel-panel" style="padding: 28px 24px; max-width: 540px;">
+        <div style="font-size:22px; color:#ff2e43; margin-bottom:14px;">CURSORE DISTRUTTO</div>
+        <p style="font-size:10px; color:#b8c2e0; line-height:1.8; margin-bottom:20px;">
+          MASSA ASSORBITA: <span id="final-score" style="color:#38e8ff;">0</span><br>
+          PIANETI POLVERIZZATI: <span id="final-planets" style="color:#26e666;">0</span><br>
+          LIVELLO RAGGIUNTO: <span id="final-lvl" style="color:#ffae2b;">1</span>
+        </p>
+        <button id="restart-btn" class="pixel-btn pixel-btn-red" style="font-size:12px; padding:14px 24px;">
+          RIGENERA CURSORE
+        </button>
+      </div>
+    </div>
+
+    <!-- Quiz di Cybersecurity quando il boss ti colpisce -->
+    <div id="quiz-screen" class="overlay-screen hidden">
+      <div class="pixel-panel quiz-panel">
+        <div class="quiz-title">ATTACCO DI TROJAN.EXE!</div>
+        <div class="quiz-subtitle">RISPONDI GIUSTO PER BLOCCARE IL DANNO</div>
+        <div id="quiz-question" class="quiz-question"></div>
+        <div id="quiz-answers" class="quiz-answers"></div>
+        <div id="quiz-feedback" class="quiz-feedback hidden"></div>
+        <button id="quiz-continue" class="pixel-btn hidden">CONTINUA</button>
+      </div>
+    </div>
+
+    <!-- Schermata Vittoria -->
+    <div id="victory-screen" class="overlay-screen hidden">
+      <div class="pixel-panel" style="padding: 28px 24px; max-width: 540px;">
+        <div style="font-size:20px; color:#26e666; margin-bottom:14px;">SISTEMA PROTETTO!</div>
+        <p style="font-size:10px; color:#b8c2e0; line-height:1.8; margin-bottom:20px;">
+          HAI ELIMINATO TROJAN.EXE<br><br>
+          MASSA ASSORBITA: <span id="win-score" style="color:#38e8ff;">0</span><br>
+          PIANETI POLVERIZZATI: <span id="win-planets" style="color:#26e666;">0</span><br>
+          LIVELLO RAGGIUNTO: <span id="win-lvl" style="color:#ffae2b;">1</span>
+        </p>
+        <button id="victory-restart-btn" class="pixel-btn pixel-btn-red" style="font-size:12px; padding:14px 24px;">
+          GIOCA ANCORA
+        </button>
+      </div>
+    </div>
+
+    <!-- Controlli Touch su dispositivi mobili -->
+    <div id="touch-controls">
+      <div id="joystick" class="joystick-zone">
+        <div id="joystick-knob" class="joystick-knob"></div>
+      </div>
+      <div class="touch-actions">
+        <button id="touch-nova" class="pixel-btn" style="padding:14px; font-size:9px; border-color:#ffae2b; color:#ffae2b;">NOVA</button>
+        <button id="touch-fire" class="pixel-btn pixel-btn-red" style="padding:18px 14px; font-size:10px;">FUOCO</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/planets.js"></script>
+  <script src="js/sentinels.js"></script>
+  <script src="js/upgrades.js"></script>
+  <script src="js/cyber-questions.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/boss.js"></script>
+  <script src="js/boss-render.js"></script>
+  <script src="js/player-actions.js"></script>
+  <script src="js/universe.js"></script>
+  <script src="js/update.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
